@@ -846,7 +846,7 @@ One powerful, personalised sentence calling them to take action on their develop
 async function generateReport(prompt, d, i, s, c, x, primary, secondary){
   try {
     // Call via secure Netlify proxy — API key never exposed in this file
-    const response = await fetch('https://re-tracker.netlify.app/.netlify/functions/generate-report', {
+    const response = await fetch('https://sales-profile.netlify.app/.netlify/functions/generate-report', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ prompt })
