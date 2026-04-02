@@ -845,15 +845,17 @@ One powerful, personalised sentence calling them to take action on their develop
 
 async function generateReport(prompt, d, i, s, c, x, primary, secondary){
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Call via secure Netlify proxy — API key never exposed in this file
+    const response = await fetch('https://re-tracker.netlify.app/.netlify/functions/generate-report', {
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{role:'user', content:prompt}]
-      })
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ prompt })
     });
+
+    if(!response.ok){
+      const errData = await response.json().catch(()=>({}));
+      throw new Error(errData.error || 'Server error '+response.status);
+    }
 
     const data = await response.json();
     const text = data.content?.[0]?.text || '';
@@ -999,4 +1001,5 @@ function retakeQuiz(){
 </script>
 </body>
 </html>
+
 
