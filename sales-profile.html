@@ -846,21 +846,26 @@ One powerful, personalised sentence calling them to take action on their develop
 async function generateReport(prompt, d, i, s, c, x, primary, secondary){
   try {
     // Call via secure Netlify proxy — API key never exposed in this file
-    const response = await fetch('https://sales-profile.netlify.app/.netlify/functions/generate-report', {
+    const NETLIFY_URL = window.location.hostname === 'localhost'
+      ? 'http://localhost:8888/.netlify/functions/generate-report'
+      : 'https://sales-profile.netlify.app/.netlify/functions/generate-report';
+
+    const response = await fetch(NETLIFY_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ prompt })
     });
 
     if(!response.ok){
-      const errData = await response.json().catch(()=>({}));
-      throw new Error(errData.error || 'Server error '+response.status);
+      let errMsg = 'Server error '+response.status;
+      try{ const errData = await response.json(); errMsg = errData.error || errData.detail || errMsg; }catch(e){}
+      throw new Error(errMsg);
     }
 
     const data = await response.json();
     const text = data.content?.[0]?.text || '';
 
-    if(!text){ throw new Error('Empty response'); }
+    if(!text){ throw new Error('Empty response from AI — please try again'); }
 
     // Parse sections
     const extract = (tag) => {
@@ -882,9 +887,10 @@ async function generateReport(prompt, d, i, s, c, x, primary, secondary){
     renderReport(userName, profileType, profileTagline, d, i, s, c, x, primary, secondary, overview, strengths, gaps, objections, roles, coaching, cta);
 
   } catch(err) {
-    console.error(err);
-    document.getElementById('error-box').style.display='block';
-    document.getElementById('error-box').textContent = 'There was an error generating your report. Please check your connection and try again.';
+    console.error('Report generation error:', err);
+    const errBox = document.getElementById('error-box');
+    errBox.style.display='block';
+    errBox.innerHTML = `<strong>Error generating report:</strong> ${err.message || 'Unknown error'}. <br><br>Please check your internet connection and try again. If the problem persists, contact Relentless Education support.`;
     showScreen('screen-report');
   }
 }
